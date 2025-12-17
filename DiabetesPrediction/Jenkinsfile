@@ -1,0 +1,74 @@
+pipeline {
+    agent any
+
+    environment {
+        // Change this to your Docker Hub username or other registry
+        DOCKER_IMAGE_NAME = "your-dockerhub-username/diabetes-prediction"
+        DOCKER_IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // This will check out the code from the current repository
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                // It is a good practice to install dependencies and run checks before building the image
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building the Docker image..."
+                    sh "docker build -t ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                // This is a simple check. Replace with your actual test command if you have one.
+                sh "python manage.py check"
+            }
+        }
+
+        // stage('Push Docker Image') {
+        //     steps {
+        //         echo "Pushing the Docker image..."
+        //         // To use this stage, you need to configure Docker Hub credentials in Jenkins
+        //         // withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_PASSWORD')]) {
+        //         //     sh "echo ${DOCKERHUB_PASSWORD} | docker login -u your-dockerhub-username --password-stdin"
+        //         //     sh "docker push ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
+        //         // }
+        //     }
+        // }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying the application..."
+                    sh "docker run -d -p 8000:8000 --name diabetes-prediction-app ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // This block will always run at the end of the pipeline
+            script {
+                echo "Cleaning up..."
+                // Stop and remove the container to avoid conflicts in the next run
+                sh 'docker stop diabetes-prediction-app || true'
+                sh 'docker rm diabetes-prediction-app || true'
+            }
+        }
+    }
+}
