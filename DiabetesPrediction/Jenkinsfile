@@ -39,17 +39,6 @@ pipeline {
             }
         }
 
-        // stage('Push Docker Image') {
-        //     steps {
-        //         echo "Pushing the Docker image..."
-        //         // To use this stage, you need to configure Docker Hub credentials in Jenkins
-        //         // withCredentials([string(credentialsId: 'dockerhub-credentials', variable: 'DOCKERHUB_PASSWORD')]) {
-        //         //     sh "echo ${DOCKERHUB_PASSWORD} | docker login -u your-dockerhub-username --password-stdin"
-        //         //     sh "docker push ${env.DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
-        //         // }
-        //     }
-        // }
-
         stage('Deploy') {
             steps {
                 script {
